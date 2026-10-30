@@ -1,7 +1,7 @@
+import { entryChanges } from './entryState'
+import type { EntryValues } from './entryState'
 import type { DayEntry } from './pay'
 import { supabase } from './supabase'
-
-type EntryValues = { status: 'rest' | 'worked'; timeIn: string | null; timeOut: string | null }
 
 export async function loadEntries(start: string, end: string): Promise<DayEntry[]> {
   const { data, error } = await supabase
@@ -22,15 +22,14 @@ export async function loadEntries(start: string, end: string): Promise<DayEntry[
 export async function saveEntry(
   userId: string,
   date: string,
-  existing: boolean,
+  existing: DayEntry | undefined,
   values: EntryValues,
   rate: number,
 ): Promise<void> {
-  const row = { status: values.status, time_in: values.timeIn, time_out: values.timeOut }
-  // Edits leave hourly_rate alone so a raise never changes a saved day.
+  const row = entryChanges(existing, values, rate)
   const { error } = existing
     ? await supabase.from('day_entries').update(row).eq('user_id', userId).eq('date', date)
-    : await supabase.from('day_entries').insert({ ...row, user_id: userId, date, hourly_rate: rate })
+    : await supabase.from('day_entries').insert({ ...row, user_id: userId, date })
   if (error) throw new Error(error.message)
 }
 

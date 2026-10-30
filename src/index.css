@@ -108,10 +108,12 @@ button.signout { width: 100%; margin-top: 16px; }
 .day-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px; }
 .day-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .day-actions { display: flex; align-items: center; gap: 6px; }
-.day-pay { margin-left: auto; font-weight: 600; font-variant-numeric: tabular-nums; }
+.day-pay { margin-left: auto; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+.day-pay small { display: block; font-weight: 400; color: var(--muted); }
 .day .error { margin-top: 8px; }
 
 .tag { padding: 1px 8px; border-radius: 999px; font-size: 0.78rem; background: var(--tint); }
+.tag.unsaved { background: var(--warn-bg); color: var(--warn-text); }
 .holiday-regular, .holiday-double { background: var(--regular-bg); color: var(--regular); }
 .holiday-special, .holiday-special_working { background: var(--special-bg); color: var(--special); }
 

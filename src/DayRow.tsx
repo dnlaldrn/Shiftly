@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { clearEntry, saveEntry } from './entries'
+import { isUnsaved } from './entryState'
 import { formatDate, formatMoney } from './format'
 import { holidayOn } from './holidays'
 import { computeDay } from './pay'
@@ -16,6 +17,7 @@ type Props = {
   rate: number
   currency: string
   onChanged: () => void
+  onUnsaved: (date: string, unsaved: boolean) => void
 }
 
 const HOLIDAY_LABELS = {
@@ -25,7 +27,7 @@ const HOLIDAY_LABELS = {
   double: 'Double holiday',
 }
 
-export default function DayRow({ userId, date, isToday, entry, previous, next, rate, currency, onChanged }: Props) {
+export default function DayRow({ userId, date, isToday, entry, previous, next, rate, currency, onChanged, onUnsaved }: Props) {
   const [status, setStatus] = useState(entry?.status)
   const [timeIn, setTimeIn] = useState(entry?.timeIn?.slice(0, 5) ?? '')
   const [timeOut, setTimeOut] = useState(entry?.timeOut?.slice(0, 5) ?? '')
@@ -33,6 +35,12 @@ export default function DayRow({ userId, date, isToday, entry, previous, next, r
   const [busy, setBusy] = useState(false)
   const holiday = holidayOn(date)
   const name = `status-${date}`
+  const unsaved = isUnsaved(entry, status, timeIn, timeOut)
+
+  useEffect(() => {
+    onUnsaved(date, unsaved)
+    return () => onUnsaved(date, false)
+  }, [date, unsaved, onUnsaved])
 
   async function run(action: () => Promise<void>) {
     setBusy(true)
@@ -53,7 +61,12 @@ export default function DayRow({ userId, date, isToday, entry, previous, next, r
       if (invalid) return setError(invalid)
     }
     const values = status === 'worked' ? { status, timeIn, timeOut } : { status, timeIn: null, timeOut: null }
-    run(() => saveEntry(userId, date, Boolean(entry), values, rate))
+    run(() => saveEntry(userId, date, entry, values, rate))
+  }
+
+  function clear() {
+    if (!window.confirm(`Clear ${formatDate(date)}? Its saved hours and rate will be removed.`)) return
+    run(() => clearEntry(userId, date))
   }
 
   return (
@@ -61,6 +74,7 @@ export default function DayRow({ userId, date, isToday, entry, previous, next, r
       <div className="day-head">
         <strong>{formatDate(date)}</strong>
         {isToday && <span className="tag">Today</span>}
+        {unsaved && <span className="tag unsaved">Unsaved</span>}
         {holiday && (
           <span className={`tag holiday-${holiday.type}`}>{holiday.name} · {HOLIDAY_LABELS[holiday.type]}</span>
         )}
@@ -79,9 +93,14 @@ export default function DayRow({ userId, date, isToday, entry, previous, next, r
         )}
         <div className="day-actions">
           <button disabled={busy || !status} onClick={save}>Save</button>
-          {entry && <button className="link" disabled={busy} onClick={() => run(() => clearEntry(userId, date))}>Clear</button>}
+          {entry && <button className="link" disabled={busy} onClick={clear}>Clear</button>}
         </div>
-        <output className="day-pay">{entry ? formatMoney(computeDay(entry).payCentavos, currency) : ''}</output>
+        <output className="day-pay">
+          {entry ? formatMoney(computeDay(entry).payCentavos, currency) : ''}
+          {entry?.status === 'worked' && entry.hourlyRate !== rate && (
+            <small>at {formatMoney(Math.round(entry.hourlyRate * 100), currency)}/hr</small>
+          )}
+        </output>
       </div>
       {error && <p className="error" role="alert">{error}</p>}
     </li>

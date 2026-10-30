@@ -82,7 +82,10 @@ its row.
 
 **Rate history:** `day_entries.hourly_rate` is copied from the profile when the
 row is created, and is kept when the row is edited. Changing the profile rate
-therefore affects new entries only, and past totals never change.
+therefore affects new entries only, and past totals never change. The one
+exception is a rest day changed to worked, which takes the current rate because
+a rest day has no pay to protect. A worked day whose rate differs from the
+profile rate shows its own rate.
 
 ## Pay rules
 

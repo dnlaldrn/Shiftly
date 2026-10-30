@@ -16,11 +16,28 @@ export default function MainScreen({ userId, profile, onSettings }: Props) {
   const [entries, setEntries] = useState<Map<string, DayEntry>>(new Map())
   const [loadError, setLoadError] = useState('')
   const latestLoad = useRef(0)
+  const unsavedDays = useRef(new Set<string>())
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 30000)
     return () => clearInterval(timer)
   }, [])
+
+  useEffect(() => {
+    const warn = (event: BeforeUnloadEvent) => {
+      if (unsavedDays.current.size > 0) event.preventDefault()
+    }
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [])
+
+  const markUnsaved = useCallback((date: string, unsaved: boolean) => {
+    if (unsaved) unsavedDays.current.add(date)
+    else unsavedDays.current.delete(date)
+  }, [])
+
+  const canLeave = () =>
+    unsavedDays.current.size === 0 || window.confirm('You have unsaved days. Leave without saving them?')
 
   // Loads one day past each end so overlap checks reach across cut-offs.
   const load = useCallback(async () => {
@@ -52,7 +69,7 @@ export default function MainScreen({ userId, profile, onSettings }: Props) {
     <main>
       <header className="top">
         <h1>Hour Tracker</h1>
-        <button className="link" onClick={onSettings}>Settings</button>
+        <button className="link" onClick={() => canLeave() && onSettings()}>Settings</button>
       </header>
 
       <section className="card countdown" aria-label="Time left in this cut-off">
@@ -61,9 +78,9 @@ export default function MainScreen({ userId, profile, onSettings }: Props) {
       </section>
 
       <nav className="period">
-        <button aria-label="Previous cut-off" onClick={() => setCutoff(shiftCutoff(cutoff, -1))}>←</button>
+        <button aria-label="Previous cut-off" onClick={() => canLeave() && setCutoff(shiftCutoff(cutoff, -1))}>←</button>
         <h2>{formatDate(cutoff.start)} – {formatDate(cutoff.end)}</h2>
-        <button aria-label="Next cut-off" onClick={() => setCutoff(shiftCutoff(cutoff, 1))}>→</button>
+        <button aria-label="Next cut-off" onClick={() => canLeave() && setCutoff(shiftCutoff(cutoff, 1))}>→</button>
       </nav>
 
       <section className="summary" aria-label="Cut-off summary">
@@ -95,6 +112,7 @@ export default function MainScreen({ userId, profile, onSettings }: Props) {
               rate={profile.hourly_rate}
               currency={profile.currency}
               onChanged={load}
+              onUnsaved={markUnsaved}
             />
           )
         })}
