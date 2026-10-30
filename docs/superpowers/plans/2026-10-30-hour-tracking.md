@@ -63,7 +63,7 @@ expect(shiftCutoff({ start: '2026-12-16', end: '2026-12-31' }, 1)).toEqual({ sta
 expect(cutoffDays({ start: '2026-02-16', end: '2026-02-28' })).toHaveLength(13)
 expect(manilaToday(new Date('2026-10-30T16:30:00Z'))).toBe('2026-10-31') // 12:30 AM Oct 31 in Manila
 expect(countdown({ start: '2026-10-16', end: '2026-10-31' }, new Date('2026-10-30T04:00:00Z')))
-  .toEqual({ days: 1, hours: 4, minutes: 0 }) // 12:00 PM Oct 30 to midnight after Oct 31
+  .toEqual({ days: 1, hours: 12, minutes: 0 }) // 12:00 PM Oct 30 to midnight after Oct 31
 expect(countdown({ start: '2026-10-16', end: '2026-10-31' }, new Date('2026-11-01T00:00:00Z')))
   .toEqual({ days: 0, hours: 0, minutes: 0 }) // never negative
 ```
@@ -348,7 +348,6 @@ git commit -m "feat: add database schema and client"
 - Produces:
   - `type Profile = { hourly_rate: number; currency: string }`
   - `<ProfileForm userId={string} profile={Profile | null} onSaved={(p: Profile) => void} />`, used for both first-time setup and Settings
-  - `formatMoney(centavos: number, currency: string): string` in `src/format.ts`, using `Intl.NumberFormat`
 
 - [ ] **Step 1: Build `AuthScreen`**
 
@@ -387,7 +386,8 @@ git commit -m "feat: add accounts and profile setup"
   - `loadEntries(start: string, end: string): Promise<DayEntry[]>`
   - `saveEntry(userId: string, date: string, existing: boolean, values: { status: 'rest' | 'worked'; timeIn: string | null; timeOut: string | null }, rate: number): Promise<void>`
   - `clearEntry(userId: string, date: string): Promise<void>`
-  - `formatHours(minutes: number): string`
+  - `formatHours(minutes: number): string` in `src/format.ts`
+  - `formatMoney(centavos: number, currency: string): string` in `src/format.ts`, using `Intl.NumberFormat`
 
 - [ ] **Step 1: Write the failing test in `src/format.test.ts`**
 
@@ -402,7 +402,7 @@ expect(formatMoney(107500, 'PHP')).toContain('1,075.00')
 Run: `npm test -- src/format.test.ts`
 Expected: FAIL.
 
-- [ ] **Step 3: Implement `formatHours`**
+- [ ] **Step 3: Implement `formatHours` and `formatMoney`**
 
 - [ ] **Step 4: Run the test**
 
