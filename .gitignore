@@ -32,3 +32,5 @@ dist-ssr
 .opencode/
 .pi/
 skills-lock.json
+.vercel
+.env*
