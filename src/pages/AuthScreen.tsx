@@ -1,6 +1,10 @@
+import { KeyRound, LogIn, UserPlus } from 'lucide-react'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { supabase } from './supabase'
+import Brand from '../components/Brand'
+import ErrorMessage from '../components/ErrorMessage'
+import { supabase } from '../lib/supabase'
+import { validateUsername } from '../lib/validate'
 
 type Mode = 'signin' | 'signup' | 'forgot'
 
@@ -8,6 +12,7 @@ const TITLES = { signin: 'Sign in', signup: 'Create account', forgot: 'Reset pas
 
 export default function AuthScreen({ recovery, onRecovered }: { recovery: boolean; onRecovered: () => void }) {
   const [mode, setMode] = useState<Mode>('signin')
+  const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -25,7 +30,13 @@ export default function AuthScreen({ recovery, onRecovered }: { recovery: boolea
       return (await supabase.auth.signInWithPassword({ email, password })).error
     }
     if (mode === 'signup') {
-      const { data, error } = await supabase.auth.signUp({ email, password })
+      const invalid = validateUsername(username)
+      if (invalid) return { message: invalid }
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { username: username.trim() } },
+      })
       if (!error && !data.session) setNotice('Check your email to confirm your account.')
       return error
     }
@@ -51,9 +62,15 @@ export default function AuthScreen({ recovery, onRecovered }: { recovery: boolea
 
   return (
     <main className="narrow">
-      <h1>Hour Tracker</h1>
+      <h1><Brand /></h1>
       <form className="card stack" onSubmit={submit}>
         <h2>{recovery ? 'Set a new password' : TITLES[mode]}</h2>
+        {!recovery && mode === 'signup' && (
+          <label>
+            Username
+            <input autoComplete="nickname" required maxLength={30} value={username} onChange={(e) => setUsername(e.target.value)} />
+          </label>
+        )}
         {!recovery && (
           <label>
             Email
@@ -73,16 +90,22 @@ export default function AuthScreen({ recovery, onRecovered }: { recovery: boolea
             />
           </label>
         )}
-        {error && <p className="error" role="alert">{error}</p>}
+        {error && <ErrorMessage>{error}</ErrorMessage>}
         {notice && <p className="notice" role="status">{notice}</p>}
         <button className="primary" disabled={busy}>
           {recovery ? 'Save password' : mode === 'forgot' ? 'Send reset link' : TITLES[mode]}
         </button>
         {!recovery && (
           <div className="links">
-            {mode !== 'signin' && <button type="button" className="link" onClick={() => switchMode('signin')}>Sign in</button>}
-            {mode !== 'signup' && <button type="button" className="link" onClick={() => switchMode('signup')}>Create account</button>}
-            {mode !== 'forgot' && <button type="button" className="link" onClick={() => switchMode('forgot')}>Forgot password?</button>}
+            {mode !== 'signin' && (
+              <button type="button" onClick={() => switchMode('signin')}><LogIn size={16} aria-hidden="true" />Sign in</button>
+            )}
+            {mode !== 'signup' && (
+              <button type="button" onClick={() => switchMode('signup')}><UserPlus size={16} aria-hidden="true" />Create account</button>
+            )}
+            {mode !== 'forgot' && (
+              <button type="button" onClick={() => switchMode('forgot')}><KeyRound size={16} aria-hidden="true" />Forgot password?</button>
+            )}
           </div>
         )}
       </form>

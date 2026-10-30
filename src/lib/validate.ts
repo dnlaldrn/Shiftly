@@ -11,6 +11,13 @@ export function validateRate(value: string): string | null {
   return null
 }
 
+export function validateUsername(value: string): string | null {
+  const length = value.trim().length
+  if (length === 0) return 'Enter a username.'
+  if (length > 30) return 'Username must be 30 characters or fewer.'
+  return null
+}
+
 export function validateShift(
   date: string,
   timeIn: string,

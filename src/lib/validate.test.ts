@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { validateRate, validateShift } from './validate'
+import { validateRate, validateShift, validateUsername } from './validate'
 import type { DayEntry } from './pay'
+
+describe('validateUsername', () => {
+  it.each(['', '   ', 'x'.repeat(31)])('rejects %j', (value) => {
+    expect(validateUsername(value)).not.toBeNull()
+  })
+  it.each(['Maria', 'x'.repeat(30), `  ${'x'.repeat(30)}  `])('accepts %j', (value) => {
+    expect(validateUsername(value)).toBeNull()
+  })
+})
 
 describe('validateRate', () => {
   it.each(['0', '-1', 'abc', '', '10000000000', '100.505'])('rejects %s', (value) => {
