@@ -1,4 +1,4 @@
-# Hour Tracking Website: Design
+# Shiftly (Hour Tracking Website): Design
 
 Date: 2026-10-30
 Status: Awaiting user review
@@ -43,11 +43,11 @@ Both can make the app show less than DOLE rules would give an eligible worker.
 
 | File | Responsibility |
 |---|---|
-| `src/pay.ts` | Pure function: a day's entry, rate and holidays in; hours and pay out |
-| `src/cutoff.ts` | Pure functions: cut-off dates for a date, and the countdown |
-| `src/holidays.ts` | PH holiday data, and whether a year's list exists |
-| `src/supabase.ts` | Supabase client |
-| `src/App.tsx` and components | Screens only, with no pay logic |
+| `src/lib/pay.ts` | Pure function: a day's entry, rate and holidays in; hours and pay out |
+| `src/lib/cutoff.ts` | Pure functions: cut-off dates for a date, and the countdown |
+| `src/lib/holidays.ts` | PH holiday data, and whether a year's list exists |
+| `src/lib/supabase.ts` | Supabase client |
+| `src/App.tsx`, `src/pages`, `src/components` | Screens and UI only, with no pay logic |
 
 The app has no routes. A password reset link returns to the site, and Supabase's
 `PASSWORD_RECOVERY` auth event shows the new-password form.
@@ -128,7 +128,7 @@ All times are Philippine time (`Asia/Manila`), whatever the device is set to.
 
 ## Holidays
 
-`src/holidays.ts` maps each date to a name and type (`regular`, `special`,
+`src/lib/holidays.ts` maps each date to a name and type (`regular`, `special`,
 `special_working`, or `double`). Dates come from Proclamation No. 1006, s. 2025
 and No. 1427, s. 2026, plus the separate Eid'l proclamations. No date in either
 list is currently a double holiday, but the type stays for when one occurs.
@@ -150,7 +150,7 @@ Dec 31.
 **2027 special working:** Feb 25.
 
 The 2027 Eid'l dates are not proclaimed yet. They, any holidays declared at
-short notice, and each new year's list must be added to `src/holidays.ts` by
+short notice, and each new year's list must be added to `src/lib/holidays.ts` by
 hand and redeployed.
 
 The Lawphil copy of Proclamation No. 1427 prints Feb 6, Mar 27, Nov 2 and Dec 24
@@ -160,18 +160,25 @@ special non-working days.
 
 ## Screens
 
-- **Sign-in:** Sign in, sign up, forgot password, and set new password.
+- **Sign-in:** Sign in, sign up (with a username of up to 30 characters, stored
+  in the Supabase user metadata), forgot password, and set new password.
 - **First-time setup:** Hourly rate and currency, with PHP preselected. Shown
   until a profile exists.
 - **Main screen:**
+  - A greeting using the username, or "Hi there" if the account has none.
+  - Skeleton placeholders while the profile or a cut-off loads.
+  - Banknotes showing the currency symbol rain behind gross pay, drawn with a
+    three.js shader and loaded separately. The rain pauses off-screen, stays
+    still for reduced motion, and is left out where WebGL is unavailable.
   - Countdown to the end of the cut-off in days, hours and minutes, moving to
     the next cut-off automatically when it ends.
   - Summary of regular hours, overtime hours, night hours and total pay.
-  - One row per day: date, holiday label, Rest/Worked choice, time in and out,
-    and that day's pay.
+  - One row per day: date, holiday label, saved hours or Rest, and that day's
+    pay. Clicking a row opens a popover with a Rest/Worked dropdown, which asks
+    for time in and time out when Worked is chosen.
   - Previous and next arrows for other cut-offs.
   - The countdown always tracks today's cut-off, whichever one is being viewed.
-- **Settings:** Hourly rate, currency, and sign out.
+- **Settings:** Username, hourly rate, currency, and sign out.
 
 ## Errors and validation
 

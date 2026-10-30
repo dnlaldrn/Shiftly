@@ -1,4 +1,4 @@
-# Hour Tracker
+# Shiftly
 
 Tracks daily hours and shows gross pay per semi-monthly cut-off under Philippine pay rules.
 The design is in `docs/superpowers/specs/2026-10-30-hour-tracking-design.md`.
@@ -24,7 +24,7 @@ In Supabase, under Authentication:
 
 ## Yearly holiday update
 
-Add each new year's dates to `src/holidays.ts` once they are proclaimed, plus Eid'l Fitr, Eid'l Adha and
+Add each new year's dates to `src/lib/holidays.ts` once they are proclaimed, plus Eid'l Fitr, Eid'l Adha and
 any holidays declared at short notice, then redeploy. Until a year is added, the app warns that its dates
 are paid at the ordinary rate.
 
