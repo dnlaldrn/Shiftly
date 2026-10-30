@@ -22,3 +22,13 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# AI tool installs and personal settings
+.agents/
+.claude/
+.codex/
+.gemini/
+.grok/
+.opencode/
+.pi/
+skills-lock.json
