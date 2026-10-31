@@ -6,6 +6,7 @@ import type { Cutoff } from '../lib/cutoff'
 import DayRow from '../components/DayRow'
 import { loadEntries } from '../lib/entries'
 import ErrorMessage from '../components/ErrorMessage'
+import Halloween from '../components/Halloween'
 import { formatDate, formatHours, formatMoney } from '../lib/format'
 import { computeDay, sumDays } from '../lib/pay'
 import type { DayEntry } from '../lib/pay'
@@ -74,6 +75,7 @@ export default function MainScreen({ userId, username, profile, onSettings }: Pr
 
   return (
     <main>
+      <Halloween />
       <header className="top">
         <Brand />
         <button onClick={onSettings}><Settings size={16} aria-hidden="true" />Settings</button>

@@ -23,6 +23,12 @@
   --skeleton: #e8ebe9;
   --skeleton-sheen: #f5f7f6;
   --shadow: 0 16px 40px -12px rgb(16 24 20 / 0.28), 0 2px 6px rgb(16 24 20 / 0.06);
+  --web: rgb(17 23 20 / 0.24);
+  --ghost: #ffffff;
+  --ghost-line: #c9d2cd;
+  --ghost-face: #29302c;
+  --spider: #1b211e;
+  --spider-eye: #e8751a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -50,6 +56,12 @@
     --skeleton: #222925;
     --skeleton-sheen: #2e3631;
     --shadow: 0 16px 40px -12px rgb(0 0 0 / 0.7), 0 2px 6px rgb(0 0 0 / 0.3);
+    --web: rgb(238 241 239 / 0.2);
+    --ghost: rgb(226 238 232 / 0.26);
+    --ghost-line: rgb(226 238 232 / 0.3);
+    --ghost-face: #0e1210;
+    --spider: #a2ada7;
+    --spider-eye: #ff9a3d;
   }
 }
 
@@ -262,6 +274,51 @@ button.signout { width: 100%; margin-top: 12px; }
 }
 h1 .skeleton { height: 1.875rem; }
 
+.halloween { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.halloween svg { display: block; }
+
+.web { position: absolute; top: 0; width: clamp(150px, 24vw, 300px); height: auto; }
+.web path { fill: none; stroke: var(--web); stroke-width: 1; }
+.web-left { left: 0; }
+.web-right { right: 0; scale: -1 1; }
+
+.ghost { position: absolute; left: 0; top: var(--top); width: var(--size); animation: ghost-drift var(--time) linear var(--delay) infinite; }
+.ghost-near { --top: 66px; --size: 48px; --time: 34s; --delay: -9s; --still: 68%; }
+.ghost-mid { --top: 44%; --size: 76px; --time: 52s; --delay: -30s; --still: 5%; animation-direction: reverse; }
+.ghost-far { --top: 74%; --size: 60px; --time: 44s; --delay: -6s; --still: 88%; }
+.ghost svg { overflow: visible; animation: ghost-bob 3.6s ease-in-out infinite alternate; }
+.ghost-body { fill: var(--ghost); stroke: var(--ghost-line); stroke-width: 1.5; }
+.ghost-eyes, .ghost-mouth { fill: var(--ghost-face); }
+.ghost-eyes { transform-box: fill-box; transform-origin: center; animation: ghost-blink 5.5s linear infinite; }
+@keyframes ghost-drift {
+  from { translate: calc(var(--size) * -1) 0; }
+  to { translate: 100vw 0; }
+}
+@keyframes ghost-bob {
+  from { translate: 0 5px; rotate: -5deg; }
+  to { translate: 0 -5px; rotate: 5deg; }
+}
+@keyframes ghost-blink {
+  0%, 94%, 100% { scale: 1 1; }
+  97% { scale: 1 0.1; }
+}
+
+/* The thread runs up past the screen edge, so moving the spider pays it out without resizing anything. */
+.spider { --drop: 62px; position: absolute; top: 0; left: 46%; width: 30px; animation: spider-drop 16s ease-in-out -5s infinite; }
+.spider::before { content: ''; position: absolute; bottom: 90%; left: calc(50% - 0.5px); width: 1px; height: 100vh; background: var(--web); }
+.spider-legs { fill: none; stroke: var(--spider); stroke-width: 1.4; stroke-linecap: round; }
+.spider-body { fill: var(--spider); }
+.spider-eye { fill: var(--spider-eye); }
+@keyframes spider-drop {
+  0%, 100% { translate: 0 -48px; }
+  30%, 42% { translate: 0 calc(var(--drop) * 0.62); }
+  58%, 70% { translate: 0 var(--drop); }
+  84% { translate: 0 calc(var(--drop) * 0.3); }
+}
+@media (min-width: 960px) {
+  .spider { --drop: 280px; left: auto; right: 64px; }
+}
+
 @media (max-width: 599px) {
   .summary div { padding-inline: 12px; }
   .summary span:not(.skeleton) { white-space: nowrap; }
@@ -286,4 +343,7 @@ h1 .skeleton { height: 1.875rem; }
 @media (prefers-reduced-motion: reduce) {
   .day-dialog, button, input, select { transition: none; }
   .skeleton { animation: none; }
+  .ghost, .ghost svg, .ghost-eyes, .spider { animation: none; }
+  .ghost { left: var(--still); }
+  .spider { translate: 0 var(--drop); }
 }
