@@ -10,8 +10,8 @@ type Mode = 'signin' | 'signup' | 'forgot'
 
 const TITLES = { signin: 'Sign in', signup: 'Create account', forgot: 'Reset password' }
 
-export default function AuthScreen({ recovery, onRecovered }: { recovery: boolean; onRecovered: () => void }) {
-  const [mode, setMode] = useState<Mode>('signin')
+export default function AuthScreen({ recovery, onRecovered, startMode = 'signin' }: { recovery: boolean; onRecovered: () => void; startMode?: Mode }) {
+  const [mode, setMode] = useState<Mode>(startMode)
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
