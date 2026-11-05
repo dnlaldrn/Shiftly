@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import AuthScreen from './pages/AuthScreen'
 import ErrorMessage from './components/ErrorMessage'
+import HomeScreen from './pages/HomeScreen'
 import MainScreen from './pages/MainScreen'
 import ProfileForm from './components/ProfileForm'
 import type { Profile } from './components/ProfileForm'
@@ -16,6 +17,7 @@ export default function App() {
   const [profileError, setProfileError] = useState('')
   const [attempt, setAttempt] = useState(0)
   const [settings, setSettings] = useState(false)
+  const [authMode, setAuthMode] = useState<'signin' | 'signup' | null>(null)
   const userId = session?.user.id
   const username: string = session?.user.user_metadata.username ?? ''
 
@@ -50,8 +52,11 @@ export default function App() {
   }, [userId, attempt])
 
   if (session === undefined) return null
+  if (!recovery && !session && !authMode) {
+    return <HomeScreen onGetStarted={() => setAuthMode('signup')} onSignIn={() => setAuthMode('signin')} />
+  }
   if (recovery || !session || !userId) {
-    return <AuthScreen recovery={recovery} onRecovered={() => setRecovery(false)} />
+    return <AuthScreen recovery={recovery} onRecovered={() => setRecovery(false)} startMode={authMode ?? undefined} />
   }
   if (profileError) {
     return (
