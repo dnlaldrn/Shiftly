@@ -1,7 +1,6 @@
 1. Start a local database (one time)
 
-supabase init     # creates supabase/config.toml
-supabase start    # runs Postgres and login locally in Docker, and applies both migrations
+supabase start    # uses the checked-in supabase/config.toml, runs Postgres and login locally in Docker, and applies both migrations
 
 supabase start prints an API URL (http://127.0.0.1:54321) and a publishable key. Put them in a new file, .env.development.local:
 
