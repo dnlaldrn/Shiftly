@@ -1,9 +1,10 @@
 import { ArrowRight, Users } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import Brand from '../components/Brand'
-import Halloween from '../components/Halloween'
 import { Skeleton } from '../components/Skeleton'
 import { supabase } from '../lib/supabase'
+
+const Christmas = lazy(() => import('../components/Christmas'))
 
 type Stats = { users: number; logs: number }
 
@@ -17,7 +18,7 @@ export default function HomeScreen({ onGetStarted, onSignIn }: { onGetStarted: (
 
   return (
     <main className="home">
-      <Halloween />
+      <Suspense fallback={null}><Christmas /></Suspense>
       <header className="top">
         <Brand />
         <button onClick={onSignIn}>Sign in</button>
@@ -41,7 +42,7 @@ export default function HomeScreen({ onGetStarted, onSignIn }: { onGetStarted: (
             <dd>{stats ? `${stats.users.toLocaleString()}+` : <Skeleton width="3.5ch" />}</dd>
           </div>
           <div>
-            <dt>Salary Logs</dt>
+            <dt>Time Logs</dt>
             <dd>{stats ? `${stats.logs.toLocaleString()}+` : <Skeleton width="3.5ch" />}</dd>
           </div>
         </dl>

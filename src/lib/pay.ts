@@ -23,8 +23,8 @@ const NIGHT_START = 1320 // 10:00 PM
 const NIGHT_END = 360 // 6:00 AM
 
 // Thousandths, so money stays in integers. Every value stays whole after the night x 1.10.
-const ORDINARY = { regular: 1000, overtime: 1250 }
-const RATES: Record<HolidayType, { regular: number; overtime: number }> = {
+export const ORDINARY = { regular: 1000, overtime: 1250 }
+export const RATES: Record<HolidayType, { regular: number; overtime: number }> = {
   special_working: ORDINARY,
   special: { regular: 1300, overtime: 1690 },
   regular: { regular: 2000, overtime: 2600 },

@@ -29,6 +29,11 @@
   --ghost-face: #29302c;
   --spider: #1b211e;
   --spider-eye: #e8751a;
+  --hat-red: #d42c38;
+  --hat-fur: #ffffff;
+  --hat-line: #d3dbd7;
+  --holly: #1d6b3c;
+  --holly-vein: #5fa77a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -62,6 +67,11 @@
     --ghost-face: #0e1210;
     --spider: #a2ada7;
     --spider-eye: #ff9a3d;
+    --hat-red: #e5484d;
+    --hat-fur: #f1f4f2;
+    --hat-line: transparent;
+    --holly: #3aa86a;
+    --holly-vein: #8fdcae;
   }
 }
 
@@ -88,6 +98,13 @@ svg { flex-shrink: 0; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
 .stack { display: flex; flex-direction: column; gap: 14px; }
 .stack label { display: flex; flex-direction: column; gap: 6px; font-size: 0.875rem; font-weight: 500; color: var(--muted); }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.password-field { position: relative; }
+.password-field input { padding-right: 48px; }
+.password-toggle { position: absolute; top: 0; right: 0; width: 44px; padding: 0; border: 0; background: transparent; color: var(--muted); }
+@media (hover: hover) {
+  .password-toggle:hover { background: transparent; color: var(--text); }
+}
 
 input, select, button { font: inherit; }
 input, select {
@@ -159,7 +176,14 @@ button.signout { width: 100%; margin-top: 12px; }
 .top { display: flex; justify-content: space-between; align-items: center; min-height: 44px; margin-bottom: 12px; }
 .top h1 { margin: 0; }
 .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; letter-spacing: -0.02em; }
-.brand-mark { display: inline-flex; padding: 4px; background: var(--accent); color: var(--accent-text); border-radius: 8px; }
+.brand-mark { position: relative; display: inline-flex; padding: 4px; background: var(--accent); color: var(--accent-text); border-radius: 8px; }
+/* Sized in percent of the badge, so the hat scales with the bigger home-page mark. */
+.brand-hat { position: absolute; left: -34%; top: -52%; width: 88%; rotate: -20deg; }
+.hat-red, .holly-berry { fill: var(--hat-red); }
+.hat-fur { fill: var(--hat-fur); stroke: var(--hat-line); stroke-width: 1.5; }
+.brand-holly { width: 1.15em; margin-left: -2px; }
+.holly-leaf { fill: var(--holly); }
+.holly-vein { fill: none; stroke: var(--holly-vein); stroke-width: 0.8; stroke-linecap: round; }
 
 .countdown { display: flex; justify-content: space-between; align-items: center; gap: 8px 12px; flex-wrap: wrap; padding: 12px 16px; background: var(--tint); border: none; }
 .countdown span { display: inline-flex; align-items: center; gap: 8px; }
@@ -274,6 +298,90 @@ button.signout { width: 100%; margin-top: 12px; }
 }
 h1 .skeleton { height: 1.875rem; }
 
+.christmas { position: fixed; inset: 0; z-index: -1; display: block; width: 100%; height: 100%; pointer-events: none; }
+
+/* The cat sits in the bottom-right corner: its bubble above, the message box to its left. */
+main.with-cat { padding-bottom: 136px; }
+.pay-cat {
+  --cat: 112px;
+  position: fixed;
+  right: 12px;
+  bottom: max(8px, env(safe-area-inset-bottom));
+  z-index: 10;
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: end;
+  justify-items: end;
+  column-gap: 4px;
+  pointer-events: none;
+}
+.pay-cat > * { pointer-events: auto; }
+.cat-bubble {
+  grid-area: 1 / 1 / 2 / 3;
+  position: relative;
+  width: min(340px, calc(100vw - 24px));
+  margin-bottom: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  transform-origin: calc(100% - 48px) 100%;
+  transition: opacity 160ms ease-out, scale 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* The tail points down at the cat's head. */
+.cat-bubble::after {
+  content: '';
+  position: absolute;
+  right: calc(var(--cat) / 2 - 8px);
+  bottom: -8px;
+  width: 14px;
+  height: 14px;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  rotate: 45deg;
+}
+.cat-bubble-text { max-height: min(50vh, 360px); overflow-y: auto; padding: 14px 44px 14px 16px; font-size: 0.9375rem; line-height: 1.55; white-space: pre-line; }
+.cat-asked { margin-bottom: 6px; color: var(--muted); font-size: 0.8125rem; overflow-wrap: anywhere; }
+.cat-thinking { color: var(--muted); letter-spacing: 0.1em; animation: cat-thinking 900ms ease-in-out infinite alternate; }
+@keyframes cat-thinking { from { opacity: 0.35; } }
+.cat-starters { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 12px; }
+.cat-starters button { min-height: 36px; padding: 6px 12px; border-radius: 999px; font-size: 0.8125rem; text-align: left; white-space: normal; }
+.cat-close { position: absolute; top: 6px; right: 6px; width: 36px; min-height: 36px; padding: 0; border: 0; background: transparent; color: var(--muted); }
+.cat-form {
+  grid-area: 2 / 1 / 3 / 2;
+  display: flex;
+  gap: 6px;
+  width: min(300px, calc(100vw - 32px - var(--cat)));
+  margin-bottom: 14px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  transition: opacity 160ms ease-out, translate 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cat-form input { min-height: 40px; }
+.cat-form button { min-height: 40px; width: 40px; flex-shrink: 0; }
+@starting-style {
+  .cat-bubble { opacity: 0; scale: 0.9; }
+  .cat-form { opacity: 0; translate: 12px 0; }
+}
+.cat-button { grid-area: 2 / 2 / 3 / 3; gap: 4px; min-height: 0; padding: 0; border: 0; background: transparent; border-radius: 24px; }
+@media (hover: hover) {
+  .cat-button:hover { background: transparent; }
+}
+.cat-canvas { display: block; width: var(--cat); height: var(--cat); }
+.cat-fallback { display: grid; place-items: center; width: var(--cat); height: var(--cat); font-size: calc(var(--cat) * 0.55); }
+.cat-hint { padding: 6px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; box-shadow: var(--shadow); font-size: 0.8125rem; white-space: nowrap; }
+@media (max-width: 599px) {
+  .pay-cat { --cat: 92px; right: 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cat-bubble, .cat-form { transition: none; }
+  .cat-thinking { animation: none; }
+}
+
 .halloween { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
 .halloween svg { display: block; }
 
@@ -360,7 +468,7 @@ main.home { display: flex; flex-direction: column; min-height: 100svh; max-width
 }
 .home .brand { gap: 10px; font-size: 1.5rem; }
 .home .brand-mark { padding: 6px; border-radius: 10px; }
-.home .brand-mark svg { width: 22px; height: 22px; }
+.home .brand-clock { width: 22px; height: 22px; }
 .home-stats { display: flex; justify-content: center; gap: 64px; text-align: center; margin: 0; padding-top: 20px; border-top: 1px solid var(--line); }
 .home-stats div { display: flex; flex-direction: column-reverse; align-items: center; gap: 2px; }
 .home-stats dt { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.875rem; }
