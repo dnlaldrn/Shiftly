@@ -6,14 +6,15 @@ import type { Cutoff } from '../lib/cutoff'
 import DayRow from '../components/DayRow'
 import { loadEntries } from '../lib/entries'
 import ErrorMessage from '../components/ErrorMessage'
-import Halloween from '../components/Halloween'
 import { formatDate, formatHours, formatMoney } from '../lib/format'
 import { computeDay, sumDays } from '../lib/pay'
 import type { DayEntry } from '../lib/pay'
 import type { Profile } from '../components/ProfileForm'
 import { SkeletonDays, SkeletonSummary } from '../components/Skeleton'
 
+const Christmas = lazy(() => import('../components/Christmas'))
 const MoneyRain = lazy(() => import('../components/MoneyRain'))
+const PayCat = lazy(() => import('../components/PayCat'))
 
 type Props = { userId: string; username: string; profile: Profile; onSettings: () => void }
 
@@ -74,8 +75,8 @@ export default function MainScreen({ userId, username, profile, onSettings }: Pr
   const loading = loadedCutoff !== cutoff && !loadError
 
   return (
-    <main>
-      <Halloween />
+    <main className="with-cat">
+      <Suspense fallback={null}><Christmas /></Suspense>
       <header className="top">
         <Brand />
         <button onClick={onSettings}><Settings size={16} aria-hidden="true" />Settings</button>
@@ -139,6 +140,7 @@ export default function MainScreen({ userId, username, profile, onSettings }: Pr
           })}
         </ul>
       )}
+      <Suspense fallback={null}><PayCat rate={profile.hourly_rate} currency={profile.currency} /></Suspense>
     </main>
   )
 }

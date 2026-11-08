@@ -1,5 +1,5 @@
-import { KeyRound, LogIn, UserPlus } from 'lucide-react'
-import { useState } from 'react'
+import { ArrowLeft, Eye, EyeOff, KeyRound, LogIn, UserPlus } from 'lucide-react'
+import { useId, useState } from 'react'
 import type { FormEvent } from 'react'
 import Brand from '../components/Brand'
 import ErrorMessage from '../components/ErrorMessage'
@@ -10,11 +10,15 @@ type Mode = 'signin' | 'signup' | 'forgot'
 
 const TITLES = { signin: 'Sign in', signup: 'Create account', forgot: 'Reset password' }
 
-export default function AuthScreen({ recovery, onRecovered, startMode = 'signin' }: { recovery: boolean; onRecovered: () => void; startMode?: Mode }) {
+type Props = { recovery: boolean; onRecovered: () => void; onBack?: () => void; startMode?: Mode }
+
+export default function AuthScreen({ recovery, onRecovered, onBack, startMode = 'signin' }: Props) {
   const [mode, setMode] = useState<Mode>(startMode)
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const passwordId = useId()
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
@@ -62,7 +66,10 @@ export default function AuthScreen({ recovery, onRecovered, startMode = 'signin'
 
   return (
     <main className="narrow">
-      <h1><Brand /></h1>
+      <header className="top">
+        <h1><Brand /></h1>
+        {onBack && <button onClick={onBack}><ArrowLeft size={16} aria-hidden="true" />Back</button>}
+      </header>
       <form className="card stack" onSubmit={submit}>
         <h2>{recovery ? 'Set a new password' : TITLES[mode]}</h2>
         {!recovery && mode === 'signup' && (
@@ -78,17 +85,30 @@ export default function AuthScreen({ recovery, onRecovered, startMode = 'signin'
           </label>
         )}
         {(recovery || mode !== 'forgot') && (
-          <label>
-            {recovery ? 'New password' : 'Password'}
-            <input
-              type="password"
-              autoComplete={mode === 'signin' && !recovery ? 'current-password' : 'new-password'}
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </label>
+          // Not wrapped in its label like the other fields, because a label may not contain the toggle button.
+          <div className="field">
+            <label htmlFor={passwordId}>{recovery ? 'New password' : 'Password'}</label>
+            <div className="password-field">
+              <input
+                id={passwordId}
+                type={showPassword ? 'text' : 'password'}
+                autoComplete={mode === 'signin' && !recovery ? 'current-password' : 'new-password'}
+                required
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                aria-label="Show password"
+                aria-pressed={showPassword}
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+              </button>
+            </div>
+          </div>
         )}
         {error && <ErrorMessage>{error}</ErrorMessage>}
         {notice && <p className="notice" role="status">{notice}</p>}

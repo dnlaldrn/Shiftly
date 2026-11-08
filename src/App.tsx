@@ -59,7 +59,15 @@ export default function App() {
     return <HomeScreen onGetStarted={() => setAuthMode('signup')} onSignIn={() => setAuthMode('signin')} />
   }
   if (recovery || !session || !userId) {
-    return <AuthScreen recovery={recovery} onRecovered={() => setRecovery(false)} startMode={authMode ?? undefined} />
+    return (
+      <AuthScreen
+        recovery={recovery}
+        onRecovered={() => setRecovery(false)}
+        // A password reset has to finish here, so there is nowhere to go back to.
+        onBack={recovery ? undefined : () => setAuthMode(null)}
+        startMode={authMode ?? undefined}
+      />
+    )
   }
   if (profileError) {
     return (
