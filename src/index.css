@@ -20,6 +20,12 @@
   --regular-bg: #fdeded;
   --special: #694900;
   --special-bg: #fdf1d7;
+  --gold: #8a6100;
+  --gold-bg: #fdf1d7;
+  --silver: #4f5a63;
+  --silver-bg: #eef1f4;
+  --bronze: #8a4a1c;
+  --bronze-bg: #f9e8dc;
   --skeleton: #e8ebe9;
   --skeleton-sheen: #f5f7f6;
   --shadow: 0 16px 40px -12px rgb(16 24 20 / 0.28), 0 2px 6px rgb(16 24 20 / 0.06);
@@ -58,6 +64,12 @@
     --regular-bg: #301819;
     --special: #f4d58d;
     --special-bg: #352a0e;
+    --gold: #f4d58d;
+    --gold-bg: #352a0e;
+    --silver: #c9d1d8;
+    --silver-bg: #232a30;
+    --bronze: #f0b48a;
+    --bronze-bg: #3a2416;
     --skeleton: #222925;
     --skeleton-sheen: #2e3631;
     --shadow: 0 16px 40px -12px rgb(0 0 0 / 0.7), 0 2px 6px rgb(0 0 0 / 0.3);
@@ -192,6 +204,39 @@ button.signout { width: 100%; margin-top: 12px; }
 
 .period { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 16px 0 12px; }
 .period-placeholder { display: flex; justify-content: center; align-items: center; min-height: 44px; margin: 16px 0 12px; }
+
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 16px; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.tabs button { min-height: 40px; border: none; background: transparent; color: var(--muted); }
+.tabs button[aria-pressed='true'] { background: var(--tint); color: var(--accent); font-weight: 600; }
+@media (hover: hover) {
+  .tabs button[aria-pressed='true']:hover { background: var(--tint); }
+}
+
+.leaderboard-wait { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+.leaderboard-wait > svg { color: var(--gold); }
+.leaderboard-wait button { margin-top: 6px; }
+
+/* Top 1 gets the full-width box; top 2 and 3 sit side by side under it. */
+.podium { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
+.podium li { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.podium li:first-child { grid-column: 1 / -1; align-items: center; padding-block: 24px; text-align: center; }
+.podium strong { font-size: 1.125rem; font-weight: 600; overflow-wrap: anywhere; }
+.podium li:first-child strong { font-size: 1.5rem; letter-spacing: -0.02em; }
+.podium-rank { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; padding: 2px 10px; border-radius: 999px; font-size: 0.8125rem; font-weight: 600; }
+.podium li:first-child .podium-rank { align-self: center; }
+.podium-pay { color: var(--muted); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.podium li:first-child .podium-pay { font-size: 1.25rem; font-weight: 600; color: var(--text); }
+.place-1 { border-color: var(--gold); }
+.place-1 .podium-rank { background: var(--gold-bg); color: var(--gold); }
+.place-2 .podium-rank { background: var(--silver-bg); color: var(--silver); }
+.place-3 .podium-rank { background: var(--bronze-bg); color: var(--bronze); }
+
+.ranks { margin: 0; padding: 0; list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.ranks li { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 52px; padding: 10px 16px; }
+.ranks li + li { border-top: 1px solid var(--line); }
+.rank-number { color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+.rank-name { overflow-wrap: anywhere; }
+.rank-pay { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
 
 .summary {
   display: grid;

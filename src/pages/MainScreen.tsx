@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Settings, Timer, TriangleAlert } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Clock, Settings, Timer, TriangleAlert, Trophy } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import Brand from '../components/Brand'
 import { addDays, countdown, cutoffDays, cutoffFor, manilaToday, shiftCutoff } from '../lib/cutoff'
@@ -6,7 +6,9 @@ import type { Cutoff } from '../lib/cutoff'
 import DayRow from '../components/DayRow'
 import { loadEntries } from '../lib/entries'
 import ErrorMessage from '../components/ErrorMessage'
+import Leaderboard from '../components/Leaderboard'
 import { formatDate, formatHours, formatMoney } from '../lib/format'
+import { supabase } from '../lib/supabase'
 import { computeDay, sumDays } from '../lib/pay'
 import type { DayEntry } from '../lib/pay'
 import type { Profile } from '../components/ProfileForm'
@@ -25,6 +27,7 @@ export default function MainScreen({ userId, username, profile, onSettings }: Pr
   const [entries, setEntries] = useState<Map<string, DayEntry>>(new Map())
   const [loadedCutoff, setLoadedCutoff] = useState<Cutoff | null>(null)
   const [loadError, setLoadError] = useState('')
+  const [tab, setTab] = useState<'logs' | 'leaderboard'>('logs')
   const latestLoad = useRef(0)
   const unsavedDays = useRef(new Set<string>())
 
@@ -74,6 +77,15 @@ export default function MainScreen({ userId, username, profile, onSettings }: Pr
   const left = countdown(cutoffFor(today), now)
   const loading = loadedCutoff !== cutoff && !loadError
 
+  // Keeps this cut-off's total in the leaderboard table. Best effort: a failed write only leaves the rankings stale until the next change.
+  useEffect(() => {
+    if (loadedCutoff !== cutoff) return
+    supabase
+      .from('pay_totals')
+      .upsert({ user_id: userId, cutoff_start: cutoff.start, pay_centavos: totals.payCentavos, currency: profile.currency })
+      .then(() => {})
+  }, [loadedCutoff, cutoff, totals.payCentavos, userId, profile.currency])
+
   return (
     <main className="with-cat">
       <Suspense fallback={null}><Christmas /></Suspense>
@@ -88,6 +100,11 @@ export default function MainScreen({ userId, username, profile, onSettings }: Pr
         <strong>{left.days}d {left.hours}h {left.minutes}m</strong>
       </section>
 
+      <div className="tabs" role="group" aria-label="Dashboard view">
+        <button aria-pressed={tab === 'logs'} onClick={() => setTab('logs')}><Clock size={16} aria-hidden="true" />Time logs</button>
+        <button aria-pressed={tab === 'leaderboard'} onClick={() => setTab('leaderboard')}><Trophy size={16} aria-hidden="true" />Leaderboard</button>
+      </div>
+
       <nav className="period">
         <button className="icon-button" aria-label="Previous cut-off" onClick={() => setCutoff(shiftCutoff(cutoff, -1))}>
           <ChevronLeft size={20} aria-hidden="true" />
@@ -98,47 +115,59 @@ export default function MainScreen({ userId, username, profile, onSettings }: Pr
         </button>
       </nav>
 
-      <div className="summary-wrap">
-        <Suspense fallback={null}><MoneyRain currency={profile.currency} /></Suspense>
-        {loading ? <SkeletonSummary /> : (
-        <section className="summary" aria-label="Cut-off summary">
-          <div className="total"><span>Gross pay</span><strong>{formatMoney(totals.payCentavos, profile.currency)}</strong></div>
-          <div><span>Regular hours</span><strong>{formatHours(totals.regularMinutes)}</strong></div>
-          <div><span>Overtime hours</span><strong>{formatHours(totals.overtimeMinutes)}</strong></div>
-          <div><span>Night hours</span><strong>{formatHours(totals.nightMinutes)}</strong></div>
-        </section>
-        )}
-      </div>
+      {tab === 'leaderboard' ? (
+        <Leaderboard
+          key={cutoff.start}
+          cutoffStart={cutoff.start}
+          ended={cutoff.end < today}
+          currency={profile.currency}
+          onLatest={() => setCutoff(shiftCutoff(cutoffFor(today), -1))}
+        />
+      ) : (
+        <>
+          <div className="summary-wrap">
+            <Suspense fallback={null}><MoneyRain currency={profile.currency} /></Suspense>
+            {loading ? <SkeletonSummary /> : (
+            <section className="summary" aria-label="Cut-off summary">
+              <div className="total"><span>Gross pay</span><strong>{formatMoney(totals.payCentavos, profile.currency)}</strong></div>
+              <div><span>Regular hours</span><strong>{formatHours(totals.regularMinutes)}</strong></div>
+              <div><span>Overtime hours</span><strong>{formatHours(totals.overtimeMinutes)}</strong></div>
+              <div><span>Night hours</span><strong>{formatHours(totals.nightMinutes)}</strong></div>
+            </section>
+            )}
+          </div>
 
-      {missingYears.length > 0 && (
-        <p className="warning" role="alert">
-          <TriangleAlert size={16} aria-hidden="true" />
-          The holiday list for {missingYears.join(', ')} has not been added, so those dates are paid at the ordinary rate.
-        </p>
-      )}
-      {loadError && <ErrorMessage>{loadError}</ErrorMessage>}
+          {missingYears.length > 0 && (
+            <p className="warning" role="alert">
+              <TriangleAlert size={16} aria-hidden="true" />
+              The holiday list for {missingYears.join(', ')} has not been added, so those dates are paid at the ordinary rate.
+            </p>
+          )}
+          {loadError && <ErrorMessage>{loadError}</ErrorMessage>}
 
-      {loading ? <SkeletonDays count={days.length} /> : (
-        <ul className="days">
-          {days.map((date) => {
-            const entry = entries.get(date)
-            return (
-              <DayRow
-                key={date}
-                userId={userId}
-                date={date}
-                isToday={date === today}
-                entry={entry}
-                previous={entries.get(addDays(date, -1))}
-                next={entries.get(addDays(date, 1))}
-                rate={profile.hourly_rate}
-                currency={profile.currency}
-                onChanged={load}
-                onUnsaved={markUnsaved}
-              />
-            )
-          })}
-        </ul>
+          {loading ? <SkeletonDays count={days.length} /> : (
+            <ul className="days">
+              {days.map((date) => {
+                const entry = entries.get(date)
+                return (
+                  <DayRow
+                    key={date}
+                    userId={userId}
+                    date={date}
+                    isToday={date === today}
+                    entry={entry}
+                    previous={entries.get(addDays(date, -1))}
+                    next={entries.get(addDays(date, 1))}
+                    rate={profile.hourly_rate}
+                    currency={profile.currency}
+                    onChanged={load}
+                    onUnsaved={markUnsaved}
+                  />
+                )
+              })}
+            </ul>
+          )}
+        </>
       )}
       <Suspense fallback={null}><PayCat rate={profile.hourly_rate} currency={profile.currency} /></Suspense>
     </main>

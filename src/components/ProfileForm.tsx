@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import ErrorMessage from './ErrorMessage'
-import { supabase } from '../lib/supabase'
+import { checkUsername, supabase } from '../lib/supabase'
 import { validateRate, validateUsername } from '../lib/validate'
 
 export type Profile = { hourly_rate: number; currency: string }
@@ -25,11 +25,17 @@ export default function ProfileForm({ userId, username, profile, onSaved }: Prop
     setError('')
     const saved = { hourly_rate: Number(rate), currency }
     try {
-      const { error } = await supabase.from('profiles').upsert({ user_id: userId, ...saved })
-      const renamed = !error && name.trim() !== username
-      const failure = renamed ? (await supabase.auth.updateUser({ data: { username: name.trim() } })).error : error
-      if (failure) setError(failure.message)
-      else onSaved(saved)
+      const renamed = name.trim() !== username
+      // Checked before saving anything, so a taken name doesn't leave the rate half-saved.
+      const taken = renamed ? await checkUsername(name) : null
+      if (taken) {
+        setError(taken)
+      } else {
+        const { error } = await supabase.from('profiles').upsert({ user_id: userId, ...saved })
+        const failure = !error && renamed ? (await supabase.auth.updateUser({ data: { username: name.trim() } })).error : error
+        if (failure) setError(failure.message)
+        else onSaved(saved)
+      }
     } catch {
       setError('Could not reach the server. Your changes were not saved.')
     }
