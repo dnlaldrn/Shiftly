@@ -3,7 +3,7 @@ import { useId, useState } from 'react'
 import type { FormEvent } from 'react'
 import Brand from '../components/Brand'
 import ErrorMessage from '../components/ErrorMessage'
-import { supabase } from '../lib/supabase'
+import { checkUsername, supabase } from '../lib/supabase'
 import { validateUsername } from '../lib/validate'
 
 type Mode = 'signin' | 'signup' | 'forgot'
@@ -17,8 +17,12 @@ export default function AuthScreen({ recovery, onRecovered, onBack, startMode = 
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const passwordId = useId()
+  const [showConfirm, setShowConfirm] = useState(false)
+  const confirmId = useId()
+  const confirming = recovery || mode === 'signup'
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
@@ -34,7 +38,7 @@ export default function AuthScreen({ recovery, onRecovered, onBack, startMode = 
       return (await supabase.auth.signInWithPassword({ email, password })).error
     }
     if (mode === 'signup') {
-      const invalid = validateUsername(username)
+      const invalid = validateUsername(username) ?? (await checkUsername(username, email))
       if (invalid) return { message: invalid }
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -51,9 +55,13 @@ export default function AuthScreen({ recovery, onRecovered, onBack, startMode = 
 
   async function submit(event: FormEvent) {
     event.preventDefault()
+    setNotice('')
+    if (confirming && password !== confirmPassword) {
+      setError('Passwords do not match.')
+      return
+    }
     setBusy(true)
     setError('')
-    setNotice('')
     try {
       const failure = recovery ? (await supabase.auth.updateUser({ password })).error : await submitAuth()
       if (failure) setError(failure.message)
@@ -106,6 +114,30 @@ export default function AuthScreen({ recovery, onRecovered, onBack, startMode = 
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+              </button>
+            </div>
+          </div>
+        )}
+        {confirming && (
+          <div className="field">
+            <label htmlFor={confirmId}>Confirm password</label>
+            <div className="password-field">
+              <input
+                id={confirmId}
+                type={showConfirm ? 'text' : 'password'}
+                autoComplete="new-password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                aria-label="Show confirm password"
+                aria-pressed={showConfirm}
+                onClick={() => setShowConfirm(!showConfirm)}
+              >
+                {showConfirm ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
               </button>
             </div>
           </div>
