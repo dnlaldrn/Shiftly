@@ -43,7 +43,8 @@ export default function AuthScreen({ recovery, onRecovered, onBack, startMode = 
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { username: username.trim() } },
+        // Without this, the confirm link goes to the Supabase Site URL instead of the site the person signed up on.
+        options: { data: { username: username.trim() }, emailRedirectTo: window.location.origin },
       })
       if (!error && !data.session) setNotice('Check your email to confirm your account.')
       return error
