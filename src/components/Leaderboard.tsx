@@ -1,5 +1,5 @@
 import { Medal, Trophy } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import ErrorMessage from './ErrorMessage'
 import { Skeleton } from './Skeleton'
 import { formatMoney } from '../lib/format'
@@ -7,10 +7,119 @@ import { supabase } from '../lib/supabase'
 
 type Rank = { rank: number; username: string; pay_centavos: number }
 
-// Mount with key={cutoffStart} so each cut-off starts from a fresh loading state.
-type Props = { cutoffStart: string; ended: boolean; currency: string; onLatest: () => void }
+type Props = { userId: string; cutoffStart: string; ended: boolean; currency: string; onLatest: () => void }
 
-export default function Leaderboard({ cutoffStart, ended, currency, onLatest }: Props) {
+// Only people who joined are ranked or can see the rankings. The leaderboard database function enforces both.
+export default function Leaderboard({ userId, ...cutoff }: Props) {
+  const [participating, setParticipating] = useState<boolean | null>(null)
+  const [confirming, setConfirming] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    supabase.from('profiles').select('participating').eq('user_id', userId).single().then(({ data, error }) => {
+      if (error) setError('Could not load the leaderboard. Check your connection and try again.')
+      else setParticipating(data.participating)
+    })
+  }, [userId])
+
+  async function join(joined: boolean) {
+    setBusy(true)
+    setError('')
+    const { error } = await supabase.from('profiles').update({ participating: joined }).eq('user_id', userId)
+    setBusy(false)
+    if (error) return setError(`Could not ${joined ? 'join' : 'leave'} the leaderboard. Check your connection and try again.`)
+    setParticipating(joined)
+    setConfirming(false)
+  }
+
+  if (participating === null) return error ? <ErrorMessage>{error}</ErrorMessage> : <PodiumSkeleton />
+
+  if (!participating) {
+    return (
+      <>
+        <section className="card leaderboard-wait">
+          <Trophy size={28} aria-hidden="true" />
+          <h2>Join the leaderboard</h2>
+          <p className="hint">
+            See how your gross pay ranks against everyone who joined. Until you join, your pay stays hidden and you
+            can't see the rankings.
+          </p>
+          <button className="primary" onClick={() => setConfirming(true)}>Participate</button>
+        </section>
+        {confirming && (
+          <JoinDialog busy={busy} error={error} onConfirm={() => join(true)} onClose={() => {
+            setConfirming(false)
+            setError('')
+          }} />
+        )}
+      </>
+    )
+  }
+
+  return (
+    <>
+      <Rankings key={cutoff.cutoffStart} {...cutoff} />
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+      <button className="leaderboard-leave" disabled={busy} onClick={() => join(false)}>
+        {busy ? 'Leaving…' : 'Leave the leaderboard'}
+      </button>
+    </>
+  )
+}
+
+type DialogProps = { busy: boolean; error: string; onConfirm: () => void; onClose: () => void }
+
+function JoinDialog({ busy, error, onConfirm, onClose }: DialogProps) {
+  const dialog = useRef<HTMLDialogElement>(null)
+
+  useEffect(() => {
+    dialog.current?.showModal()
+  }, [])
+
+  return (
+    <dialog
+      ref={dialog}
+      className="day-dialog centered"
+      aria-labelledby="join-title"
+      onClose={onClose}
+      onClick={(event) => {
+        if (event.target === dialog.current && !busy) dialog.current?.close()
+      }}
+    >
+      <div className="stack">
+        <h2 id="join-title">Disclose your pay?</h2>
+        <p>
+          Your username and gross pay will be disclosed and ranked for every cut-off, past ones included. Everyone
+          else who joined can see them.
+        </p>
+        <p className="hint">You can leave at any time, and your pay is hidden again.</p>
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+        <div className="dialog-actions">
+          <button type="button" autoFocus disabled={busy} onClick={() => dialog.current?.close()}>Cancel</button>
+          <button type="button" className="primary" disabled={busy} onClick={onConfirm}>
+            {busy ? 'Joining…' : 'Participate'}
+          </button>
+        </div>
+      </div>
+    </dialog>
+  )
+}
+
+function PodiumSkeleton() {
+  return (
+    <ol className="podium" aria-busy="true" aria-label="Loading rankings">
+      {[1, 2, 3].map((place) => (
+        <li key={place}><Skeleton width="3rem" /><Skeleton width="60%" /><Skeleton width="45%" /></li>
+      ))}
+    </ol>
+  )
+}
+
+// Mount with key={cutoffStart} so each cut-off starts from a fresh loading state.
+type RankingsProps = Omit<Props, 'userId'>
+
+function Rankings({ cutoffStart, ended, currency, onLatest }: RankingsProps) {
   const [ranks, setRanks] = useState<Rank[] | null>(null)
   const [error, setError] = useState('')
 
@@ -32,22 +141,14 @@ export default function Leaderboard({ cutoffStart, ended, currency, onLatest }: 
       <section className="card leaderboard-wait">
         <Trophy size={28} aria-hidden="true" />
         <h2>Rankings are announced when this cut-off ends</h2>
-        <p className="hint">Keep logging your hours. Everyone's gross pay is ranked once the cut-off is over.</p>
+        <p className="hint">Keep logging your hours. Everyone who joined is ranked by gross pay once the cut-off is over.</p>
         <button onClick={onLatest}>See the latest results</button>
       </section>
     )
   }
   if (error) return <ErrorMessage>{error}</ErrorMessage>
-  if (!ranks) {
-    return (
-      <ol className="podium" aria-busy="true" aria-label="Loading rankings">
-        {[1, 2, 3].map((place) => (
-          <li key={place}><Skeleton width="3rem" /><Skeleton width="60%" /><Skeleton width="45%" /></li>
-        ))}
-      </ol>
-    )
-  }
-  if (ranks.length === 0) return <p className="card hint">Nobody logged any pay in this cut-off.</p>
+  if (!ranks) return <PodiumSkeleton />
+  if (ranks.length === 0) return <p className="card hint">Nobody who joined logged any pay in this cut-off.</p>
 
   return (
     <>

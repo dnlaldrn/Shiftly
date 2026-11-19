@@ -117,7 +117,7 @@ export default function MainScreen({ userId, username, profile, onSettings }: Pr
 
       {tab === 'leaderboard' ? (
         <Leaderboard
-          key={cutoff.start}
+          userId={userId}
           cutoffStart={cutoff.start}
           ended={cutoff.end < today}
           currency={profile.currency}

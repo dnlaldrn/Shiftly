@@ -215,6 +215,7 @@ button.signout { width: 100%; margin-top: 12px; }
 .leaderboard-wait { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
 .leaderboard-wait > svg { color: var(--gold); }
 .leaderboard-wait button { margin-top: 6px; }
+.leaderboard-leave { display: block; margin: 16px auto 0; }
 
 /* Top 1 gets the full-width box; top 2 and 3 sit side by side under it. */
 .podium { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
@@ -327,6 +328,10 @@ button.signout { width: 100%; margin-top: 12px; }
 .time-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
 .dialog-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
 .dialog-actions .danger-soft { margin-right: auto; }
+/* Not tied to a row, so it sits in the middle of the screen. Phones keep the bottom sheet. */
+@media (min-width: 600px) {
+  .day-dialog.centered { inset: 0; margin: auto; height: fit-content; }
+}
 .dialog-confirm { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 0.9375rem; }
 
 .skeleton {
